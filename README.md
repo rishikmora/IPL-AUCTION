@@ -17,12 +17,44 @@ THE HAMMER is a full-stack web app that lets you run an IPL-style cricket auctio
 
 ## Features
 
+### 🎬 Broadcast Layer (v2)
+- **Player Stat Cards**: Monogram avatar, career numbers, and a last-5 form graph per player (deterministically simulated from the player's name — clearly labeled, not real data)
+- **Live Bid Animations**: Amount pop, stage flash, franchise-colored confetti on every SOLD
+- **Auctioneer Commentary**: Rule-based broadcast lines that react to context — opening calls, bidding wars, big-money territory, steals at base price, unsold silence
+- **Voice Auctioneer**: Toggleable Web Speech narration of every commentary line (works offline, no API needed)
+- **Sound Effects**: Synthesized via WebAudio — bid ticks, gavel, crowd cheer/groan, heartbeat. No audio files, no loading
+- **Drama Mode**: Final 5 seconds of a contested lot pulse the whole screen red with a heartbeat
+
+### 🧠 Strategy Layer (v2)
+- **War Room Dashboard**: Your private panel — squad composition bars, strength rating, max-safe-bid and per-slot budget math, and a rule-based advisor that names affordable targets for your squad gaps
+- **Team Strength Ratings**: 0–100 score from squad rating average + balance bonuses (WK, 3+ bowlers, 2+ ARs) + depth
+- **Live Strength Leaderboard**: Ranked rail that updates after every sale
+- **Most Contested Board**: Players who triggered bidding wars (3+ bids)
+- **Player Browser**: Search and role-filter all 76 players with live status (pending/live/sold/unsold + price)
+- **Watchlist**: Star players; get an alert chime + toast the moment they hit the block
+
+### 💬 Social Layer (v2)
+- **Room Chat**: Realtime chat with franchise-colored identity, token-verified senders, 280-char limit, unread dot
+- **Trophy Room**: Strongest-squad champions from your past auctions, on the landing page
+
+### 📊 Post-Auction Layer (v2)
+- **Awards**: Record Signing, Bargain of the Night, Shopaholic, Ice in the Veins, Strongest Squad
+- **Auction Timeline**: Every lot in order with outcome and price
+- **Team Comparison**: Side-by-side squad cards with strength and composition
+- **Season Simulator**: Double round-robin + playoffs, win odds from squad strength, full points table
+- **Champion Odds**: 500 simulated seasons → title probability per team
+- **Highlights Export**: One tap copies a shareable text summary
+
+---
+
+
 ### 🎯 Core Auction Engine
 - **76 Fresh Players**: Marquee names (Virat, Bumrah) down to uncapped picks, shuffled into a random order every room
 - **Real Purse Mechanics**: ₹120 Cr per franchise; bids auto-deduct; squad cap (15 players) enforced
 - **IPL-Accurate Bid Slabs**: Increment by ₹5L below ₹1 Cr → ₹10L (₹1–2 Cr) → ₹20L (₹2–5 Cr) → ₹25L (₹5–10 Cr) → ₹50L (₹10 Cr+)
 - **Race-Safe Bidding**: Row-level locking in Postgres; no race conditions even with 10 simultaneous bids
-- **Anti-Snipe Timer**: Timer auto-extends 12s when someone bids in the final seconds
+- **Custom Lot Timer**: Host sets seconds-per-lot at room creation (10–120s, clamped server-side)
+- **Anti-Snipe Timer**: Timer auto-extends up to 12s when someone bids in the final seconds (never beyond the room's own timer)
 - **Atomic Transactions**: A bid either succeeds fully or fails fully — no half-states
 
 ### ✨ UX/DX
@@ -32,6 +64,7 @@ THE HAMMER is a full-stack web app that lets you run an IPL-style cricket auctio
 - **Session Resume**: Refresh the page mid-auction and you're back where you left off (session stored in localStorage)
 - **Mobile Responsive**: Works on phones, tablets, and desktops
 - **Host Controls**: Auctioneer has an isolated control bar with hammer button and optional auto-hammer-at-zero toggle
+- **Squad Peek**: Tap any franchise's purse card mid-auction to see every player they've bought, what they paid, and what's left
 
 ### 🛡️ Security
 - **No Client Writes**: All mutations go through `SECURITY DEFINER` stored procedures; RLS blocks direct table access
@@ -70,7 +103,7 @@ THE HAMMER is a full-stack web app that lets you run an IPL-style cricket auctio
 
 ### For the Host (Slightly Less Simple)
 1. **Open the file** (same as above)
-2. **Create a room**: Give it a name (e.g., "Saturday Mega Auction"), get a 6-letter code
+2. **Create a room**: Give it a name (e.g., "Saturday Mega Auction") and pick seconds-per-lot (10–120s), get a 6-letter code
 3. **Share the code** with friends via WhatsApp/Slack/email
 4. **Wait for teams**: Each friend claims a franchise (CSK, MI, RCB, etc.) with their name
 5. **Start the auction**: Once 2+ teams are in, hit **Start Auction**
@@ -92,7 +125,7 @@ ipl_rooms ─────────────────┐ (1:N)
 ├─ current_player_id ────────┘
 ├─ current_bid (₹ in lakhs)
 ├─ current_bid_team
-├─ timer_ends_at
+├─ timer_ends_at, timer_seconds (host-configured, 10–120)
 ├─ sold_count, unsold_count
 └─ base_purse (default ₹120 Cr)
 
@@ -130,8 +163,9 @@ ipl_tokens ← SECRETS TABLE
 
 ### Key Stored Procedures
 
-**`ipl_create_room(name)`**
+**`ipl_create_room(name, timer_seconds)`**
 - Generates a unique 6-char alphanumeric room code
+- Stores a per-room lot timer (clamped to 10–120 seconds)
 - Creates room, copies 76 players from the pool, shuffles them
 - Issues a host token (returned to creator, stored in localStorage)
 - Returns: `{ room_id, code, host_token }`
@@ -277,8 +311,8 @@ cur < ₹100L   → +₹5L
 ```
 Enforced in `ipl_increment(amount)` function; `ipl_place_bid` calls `ipl_next_bid` every time.
 
-### 4. Anti-Snipe Timer
-- Each lot gets 30 seconds by default
+### 4. Custom & Anti-Snipe Timer
+- Each lot runs for the host's chosen duration (default 30s, configurable 10–120s at room creation)
 - If a bid lands in the final 12 seconds, the timer extends to 12 more seconds
 - This prevents someone from bidding at 0:02 and winning before others can react
 - Timer is *display-only* on the client; the host's hammer click is the authority
@@ -289,7 +323,13 @@ Enforced in `ipl_increment(amount)` function; `ipl_place_bid` calls `ipl_next_bi
 - Auto-hammer: when the timer hits 0, if no one's bid, the app calls hammer automatically
 - Useful if the host wants to fast-track through unsold players
 
-### 6. Results & Analytics
+### 6. Squad Peek (Mid-Auction Scouting)
+- Every purse card on the auction stage is tappable
+- Opens a modal with that franchise's full squad so far: player, role, country, price paid (sorted by price)
+- Footer shows total spent and purse remaining
+- Updates live — useful for reading opponents ("they have no bowlers and ₹8 Cr left; they NEED Bumrah")
+
+### 7. Results & Analytics
 - After all 76 players are auctioned, results screen appears
 - Shows all teams' final squads sorted by total spend (descending)
 - Each team card lists:
@@ -299,6 +339,12 @@ Enforced in `ipl_increment(amount)` function; `ipl_place_bid` calls `ipl_next_bi
   - Highest buy for that team
 
 ---
+
+## What's Simulated vs Real
+
+- **Bidding, purses, squads, chat**: real, server-authoritative, race-safe
+- **Player career stats & form**: simulated deterministically from the player's name (the same player always shows the same stats). Real IPL statistics would need a licensed data feed
+- **Season simulator & champion odds**: game-layer math from squad strength, not predictions
 
 ## Known Limitations & Future Ideas
 
