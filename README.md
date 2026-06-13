@@ -13,6 +13,8 @@ THE HAMMER is a full-stack web app that lets you run an IPL-style cricket auctio
 
 **No sign-ups. No logins. No friction.** Open the file, create a room, share the code.
 
+Two game modes: **Auction** (purses, paddles, the hammer) and **Draft** (toss → one-by-one picks, fantasy-style).
+
 ---
 
 ## Features
@@ -24,6 +26,17 @@ THE HAMMER is a full-stack web app that lets you run an IPL-style cricket auctio
 - **Voice Auctioneer**: Toggleable Web Speech narration of every commentary line (works offline, no API needed)
 - **Sound Effects**: Synthesized via WebAudio — bid ticks, gavel, crowd cheer/groan, heartbeat. No audio files, no loading
 - **Drama Mode**: Final 5 seconds of a contested lot pulse the whole screen red with a heartbeat
+
+
+### 🪙 Draft Mode (v3)
+- **Host-entered rosters**: The room creator types friends' names (2–10) — no one has to sign up for anything
+- **Custom player pool (local tournaments)**: Optionally replace the 76 IPL stars with your own players — one per line as `Name, Role, Rating` (role and rating optional, defaults Player/75). Names are deduped, ratings clamped 40–99, up to 200 players. Role filters rebuild automatically from whatever roles you typed
+- **Server-side toss**: When the host hits start, the database shuffles the pick order; the toss winner picks first
+- **One-by-one picks**: Straight round-robin rotation until the pool is exhausted — every player gets drafted, split as evenly as possible (earliest pickers absorb any remainder). "Round 2 of 3 · Pick 7 of 20" always visible
+- **Pick from any device**: Friends can join with the room code and tap "This is me" to claim their seat and pick from their own phone — or the host runs the whole thing pass-and-play
+- **Turn enforcement at the database**: Out-of-turn picks and stolen players are rejected server-side, race-safe under simultaneous taps
+- **Live draft boards**: Every drafter's picks update in real time, current picker glows in their franchise color
+- **Draft awards**: Toss Winner, First Overall, Best Player Drafted, Steal of the Draft, Strongest Squad — plus the same season simulator and champion odds
 
 ### 🧠 Strategy Layer (v2)
 - **War Room Dashboard**: Your private panel — squad composition bars, strength rating, max-safe-bid and per-slot budget math, and a rule-based advisor that names affordable targets for your squad gaps
@@ -78,7 +91,7 @@ THE HAMMER is a full-stack web app that lets you run an IPL-style cricket auctio
 
 | Layer | Tech |
 |-------|------|
-| **Frontend** | Vanilla JS + HTML5 + CSS3 (no frameworks) |
+| **Frontend** | Vanilla JS + HTML5 + CSS3 (no frameworks) — "Broadcast Royale" theme: black/navy/gold, metallic gradients, glassmorphism, broadcast lower-thirds |
 | **Realtime** | Supabase Realtime (PostgreSQL LISTEN/NOTIFY) |
 | **Backend** | PostgreSQL 17 + PL/pgSQL stored procedures |
 | **Auth** | Token-based (generated server-side, never persisted) |
@@ -529,6 +542,6 @@ For issues or questions, refer to the [Supabase documentation](https://supabase.
 
 ---
 
-**Made with ⚡ by Rishik for Saturday night auctions and beyond.**
+**Made by Rishik Mora — for Saturday night auctions and beyond.**
 
 *Last updated: June 2026*
