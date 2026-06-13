@@ -600,6 +600,39 @@ body::before{ /* broadcast vignette */
 .simtable tr.q td{background:rgba(245,196,84,.05)}
 .trophies .tro .cup{filter:drop-shadow(0 0 12px rgba(245,196,84,.5))}
 
+/* ---------- voice dock ---------- */
+.vdock{
+  position:fixed;right:16px;bottom:16px;z-index:46;display:flex;flex-direction:column;gap:8px;align-items:flex-end;
+}
+.vrow{display:flex;gap:8px}
+.vbtn{
+  font-family:var(--disp);font-weight:700;font-size:13px;letter-spacing:.06em;color:var(--ink);
+  background:rgba(8,11,26,.82);border:1px solid var(--line-hi);border-radius:999px;padding:11px 18px;
+  backdrop-filter:blur(16px);box-shadow:0 10px 36px rgba(0,0,0,.5);cursor:pointer;
+  transition:all .15s ease;
+}
+.vbtn:hover{border-color:var(--gold);color:var(--gold)}
+.vbtn.live{background:linear-gradient(135deg,rgba(61,220,151,.18),rgba(8,11,26,.85));border-color:rgba(61,220,151,.5);color:#7BEFC0}
+.vbtn.vself{padding:11px 14px}
+.vbtn.vself.off{border-color:rgba(255,92,92,.55);color:#FF8E8E}
+.vpeeps{display:flex;flex-direction:column;gap:6px;align-items:flex-end;max-height:42vh;overflow-y:auto}
+.vchip{
+  display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--ink);
+  background:rgba(8,11,26,.85);border:1px solid var(--line);border-radius:999px;padding:7px 12px;
+  backdrop-filter:blur(14px);animation:slidein .2s ease;
+}
+.vchip .vd{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 8px var(--ok)}
+.vchip.speaking{border-color:rgba(61,220,151,.6)}
+.vchip.banned{opacity:.55}
+.vchip.banned .vd{background:var(--danger);box-shadow:none}
+.vchip .mod{display:flex;gap:4px;margin-left:4px}
+.vchip .mod button{
+  background:rgba(255,255,255,.06);border:1px solid var(--line);color:var(--muted);
+  border-radius:6px;font-size:11px;padding:3px 7px;cursor:pointer;line-height:1;
+}
+.vchip .mod button:hover{border-color:var(--danger);color:#FF8E8E}
+@media(max-width:980px){.vdock{bottom:150px}}
+
 /* credit */
 .credit{
   position:fixed;left:16px;bottom:14px;z-index:45;font-size:10.5px;letter-spacing:.24em;
@@ -621,6 +654,14 @@ body::before{ /* broadcast vignette */
 <body>
 
 <div class="conn" id="conn"><span class="dot"></span><span id="connTxt">offline</span></div>
+<div class="vdock" id="vdock" style="display:none">
+  <div class="vpeeps" id="vPeeps"></div>
+  <div class="vrow">
+    <button class="vbtn" id="vJoin">🎤 Join voice</button>
+    <button class="vbtn vself" id="vSelf" style="display:none" title="Mute / unmute yourself">🎙</button>
+  </div>
+</div>
+<div id="vAudio" style="display:none"></div>
 <div class="credit">Made by <b>Rishik Mora</b></div>
 <div class="toast" id="toast"></div>
 
@@ -2012,6 +2053,205 @@ leave = function(){
   _leave();
 };
 $('btnLeave').onclick = leave; $('btnLeave2').onclick = leave; $('btnLeave3').onclick = leave; $('btnAgain').onclick = leave;
+
+</script>
+<script>
+/* ====================================================================
+   THE HAMMER v4 — LIVE VOICE (WebRTC mesh, Supabase signaling)
+   Host moderation: mute once (instant cut, they may unmute) or
+   mute for the whole auction (persisted, enforced on every client).
+==================================================================== */
+
+const VC = {
+  clientId: localStorage.getItem('hammer_client_id') ||
+            (localStorage.setItem('hammer_client_id', crypto.randomUUID()), localStorage.getItem('hammer_client_id')),
+  channel:null, joined:false, selfMuted:false,
+  local:null, peers:{}, roster:{}, banned:new Set(), roomId:null,
+  ICE:{ iceServers:[{ urls:['stun:stun.l.google.com:19302','stun:stun1.l.google.com:19302'] }] },
+};
+function vcLabel(){
+  const me = S.teams.find(t=>t.id===S.teamId);
+  return me ? me.owner_name : (S.hostToken ? 'Auctioneer' : 'Spectator');
+}
+const vcAmBanned = ()=> VC.banned.has(VC.clientId);
+
+/* ---------- channel lifecycle (per room) ---------- */
+async function vcEnsure(){
+  if(!S.roomId){ vcTeardown(); return; }
+  if(VC.roomId === S.roomId && VC.channel) return;
+  vcTeardown();
+  VC.roomId = S.roomId;
+
+  const { data } = await sb.from('ipl_voice_mutes').select('client_id').eq('room_id', S.roomId);
+  VC.banned = new Set((data||[]).map(r=>r.client_id));
+
+  VC.channel = sb.channel('voice:'+S.roomId, { config:{ presence:{ key: VC.clientId }, broadcast:{ self:false } } })
+    .on('broadcast', { event:'signal' }, ({payload}) => vcSignal(payload))
+    .on('broadcast', { event:'modmute' }, ({payload}) => {
+      if(payload.target === VC.clientId && VC.joined){
+        vcSetSelfMuted(true);
+        toast('🔇 The host muted your mic — you can unmute when ready');
+      }
+    })
+    .on('presence', { event:'sync' }, ()=>{
+      const state = VC.channel.presenceState();
+      VC.roster = {};
+      for(const [key, metas] of Object.entries(state)) VC.roster[key] = metas[0];
+      // open offers to talkers we don't have yet (deterministic initiator: lower id offers)
+      if(VC.joined) for(const id of Object.keys(VC.roster)){
+        if(id !== VC.clientId && !VC.peers[id] && VC.clientId < id) vcCreatePeer(id, true);
+      }
+      // drop peers who left
+      for(const id of Object.keys(VC.peers)) if(!VC.roster[id]) vcDropPeer(id);
+      vcRender();
+    })
+    .on('postgres_changes', {event:'*', schema:'public', table:'ipl_voice_mutes', filter:`room_id=eq.${S.roomId}`},
+      async ()=>{
+        const { data:d2 } = await sb.from('ipl_voice_mutes').select('client_id').eq('room_id', S.roomId);
+        VC.banned = new Set((d2||[]).map(r=>r.client_id));
+        if(vcAmBanned() && VC.joined){ vcLeave(); toast('⛔ The host muted you for the whole auction', true); }
+        for(const id of Object.keys(VC.peers)) vcApplyBan(id);
+        vcRender();
+      })
+    .subscribe();
+  vcRender();
+}
+function vcTeardown(){
+  vcLeave(true);
+  if(VC.channel){ sb.removeChannel(VC.channel); VC.channel=null; }
+  VC.roster={}; VC.roomId=null; vcRender();
+}
+
+/* ---------- join / leave / self-mute ---------- */
+async function vcJoin(){
+  if(vcAmBanned()) return toast('You are muted for this auction by the host', true);
+  try{
+    VC.local = await navigator.mediaDevices.getUserMedia({ audio:{ echoCancellation:true, noiseSuppression:true } });
+  }catch(e){ return toast('Mic permission denied — allow microphone access to talk', true); }
+  VC.joined = true; VC.selfMuted = false;
+  await VC.channel.track({ label: vcLabel(), id: VC.clientId });
+  // offer to existing talkers where I'm the deterministic initiator
+  for(const id of Object.keys(VC.roster)) if(id !== VC.clientId && VC.clientId < id) vcCreatePeer(id, true);
+  vcRender();
+}
+function vcLeave(silent){
+  if(VC.local){ VC.local.getTracks().forEach(t=>t.stop()); VC.local=null; }
+  for(const id of Object.keys(VC.peers)) vcDropPeer(id);
+  if(VC.joined && VC.channel) VC.channel.untrack();
+  VC.joined = false; VC.selfMuted = false;
+  if(!silent) vcRender();
+}
+function vcSetSelfMuted(m){
+  VC.selfMuted = m;
+  if(VC.local) VC.local.getAudioTracks().forEach(t=> t.enabled = !m);
+  vcRender();
+}
+
+/* ---------- mesh peers ---------- */
+function vcCreatePeer(id, initiator){
+  if(VC.peers[id]) return VC.peers[id];
+  const pc = new RTCPeerConnection(VC.ICE);
+  VC.peers[id] = pc;
+  if(VC.local) VC.local.getTracks().forEach(t=> pc.addTrack(t, VC.local));
+  pc.onicecandidate = e=>{ if(e.candidate) vcSend({ t:'ice', to:id, c:e.candidate }); };
+  pc.ontrack = e=>{
+    let a = document.getElementById('va_'+id);
+    if(!a){ a = document.createElement('audio'); a.id='va_'+id; a.autoplay=true; $('vAudio').appendChild(a); }
+    a.srcObject = e.streams[0];
+    vcApplyBan(id);
+  };
+  pc.onconnectionstatechange = ()=>{ if(['failed','closed','disconnected'].includes(pc.connectionState)) vcDropPeer(id); };
+  if(initiator){
+    pc.createOffer().then(o=>pc.setLocalDescription(o)).then(()=> vcSend({ t:'offer', to:id, sdp:pc.localDescription }));
+  }
+  return pc;
+}
+function vcDropPeer(id){
+  VC.peers[id]?.close(); delete VC.peers[id];
+  document.getElementById('va_'+id)?.remove();
+  vcRender();
+}
+function vcApplyBan(id){
+  const a = document.getElementById('va_'+id);
+  if(a) a.muted = VC.banned.has(id);     // nobody hears a banned mic
+}
+function vcSend(payload){ VC.channel?.send({ type:'broadcast', event:'signal', payload:{ ...payload, from:VC.clientId } }); }
+
+async function vcSignal(m){
+  if(m.to !== VC.clientId) return;
+  if(VC.banned.has(m.from)) return;       // ignore signaling from banned clients
+  if(!VC.joined) return;
+  const pc = VC.peers[m.from] || vcCreatePeer(m.from, false);
+  try{
+    if(m.t === 'offer'){
+      await pc.setRemoteDescription(m.sdp);
+      const ans = await pc.createAnswer();
+      await pc.setLocalDescription(ans);
+      vcSend({ t:'answer', to:m.from, sdp:pc.localDescription });
+    } else if(m.t === 'answer'){
+      await pc.setRemoteDescription(m.sdp);
+    } else if(m.t === 'ice'){
+      await pc.addIceCandidate(m.c);
+    }
+  }catch(e){ console.warn('voice signal', e); }
+}
+
+/* ---------- host moderation ---------- */
+function vcMuteOnce(id){
+  VC.channel?.send({ type:'broadcast', event:'modmute', payload:{ target:id } });
+  toast('Muted once — they can unmute themselves');
+}
+async function vcMuteForever(id, label){
+  try{
+    await rpc('ipl_voice_mute', { p_room_id:S.roomId, p_host_token:S.hostToken, p_client_id:id, p_label:label||'' });
+    toast('⛔ Muted for the whole auction');
+  }catch(e){ toast(e.message, true); }
+}
+async function vcUnmute(id){
+  try{ await rpc('ipl_voice_unmute', { p_room_id:S.roomId, p_host_token:S.hostToken, p_client_id:id }); toast('Unmuted'); }
+  catch(e){ toast(e.message, true); }
+}
+
+/* ---------- dock UI ---------- */
+function vcRender(){
+  const inRoom = !!S.roomId && !$('landing').classList.contains('active');
+  $('vdock').style.display = inRoom ? 'flex' : 'none';
+  if(!inRoom) return;
+
+  $('vJoin').textContent = VC.joined ? '🔴 Leave voice' : '🎤 Join voice';
+  $('vJoin').classList.toggle('live', VC.joined);
+  $('vSelf').style.display = VC.joined ? '' : 'none';
+  $('vSelf').textContent = VC.selfMuted ? '🔇' : '🎙';
+  $('vSelf').classList.toggle('off', VC.selfMuted);
+
+  const ids = Object.keys(VC.roster);
+  $('vPeeps').innerHTML = ids.map(id=>{
+    const r = VC.roster[id];
+    const banned = VC.banned.has(id);
+    const me = id === VC.clientId;
+    const mod = (S.hostToken && !me) ? `<span class="mod">
+        ${banned
+          ? `<button data-vu="${id}" title="Unmute for the auction">🔊</button>`
+          : `<button data-v1="${id}" title="Mute once (they can unmute)">🔇</button>
+             <button data-vx="${id}" data-l="${(r.label||'').replace(/"/g,'')}" title="Mute for the whole auction">⛔</button>`}
+      </span>` : '';
+    return `<div class="vchip ${banned?'banned':''}"><span class="vd"></span>${r.label||'Guest'}${me?' (you)':''}${banned?' · muted':''}${mod}</div>`;
+  }).join('');
+  $('vPeeps').querySelectorAll('[data-v1]').forEach(b=> b.onclick = ()=> vcMuteOnce(b.dataset.v1));
+  $('vPeeps').querySelectorAll('[data-vx]').forEach(b=> b.onclick = ()=> vcMuteForever(b.dataset.vx, b.dataset.l));
+  $('vPeeps').querySelectorAll('[data-vu]').forEach(b=> b.onclick = ()=> vcUnmute(b.dataset.vu));
+}
+$('vJoin').onclick = ()=> VC.joined ? vcLeave() : vcJoin();
+$('vSelf').onclick = ()=> vcSetSelfMuted(!VC.selfMuted);
+
+/* hook room lifecycle */
+const _show_v4 = show;
+show = function(id){ _show_v4(id); vcEnsure(); };
+const _leave_v4 = leave;
+leave = function(){ vcTeardown(); _leave_v4(); };
+$('btnLeave').onclick = leave; $('btnLeave2').onclick = leave; $('btnLeave3').onclick = leave; $('btnAgain').onclick = leave;
+if(S.roomId) vcEnsure();
+window.addEventListener('beforeunload', ()=> { try{ VC.channel?.untrack(); }catch(e){} });
 
 </script>
 </body>
