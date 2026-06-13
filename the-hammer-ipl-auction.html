@@ -6,7 +6,7 @@
 <title>THE HAMMER — IPL Auction Nights</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;700;800;900&family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Saira+Condensed:wght@800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{
@@ -335,6 +335,34 @@ body.drama::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:
 @media(max-width:700px){.cmpwrap{grid-template-columns:1fr}}
 select.csel{background:var(--panel-2);border:1px solid var(--line);border-radius:9px;color:var(--ink);padding:10px 12px;font-size:14px;outline:none}
 
+/* ===== v3: draft mode ===== */
+@media(max-width:980px){.gateway{grid-template-columns:1fr!important}}
+#draft{padding:30px 0 90px}
+.tossbar{border:1px solid var(--line);border-radius:16px;background:var(--panel);padding:22px 24px;margin-bottom:20px;text-align:center;position:relative;overflow:hidden}
+.tossbar .won{font-size:12px;letter-spacing:.24em;text-transform:uppercase;color:var(--gold);font-weight:800}
+.onclock{font-family:var(--disp);font-weight:900;text-transform:uppercase;font-size:clamp(34px,5vw,54px);line-height:1;margin:8px 0 4px;color:var(--lead);transition:color .4s}
+.pickmeta{font-size:13px;color:var(--muted)}
+.onclock.me::after{content:' — YOUR PICK';font-size:.4em;color:var(--ok);vertical-align:middle;letter-spacing:.15em}
+.dgrid{display:grid;grid-template-columns:300px 1fr;gap:18px;align-items:start}
+@media(max-width:980px){.dgrid{grid-template-columns:1fr}}
+.board{border:1px solid var(--line);border-radius:12px;background:var(--panel);margin-bottom:10px;overflow:hidden}
+.board .bh{display:flex;align-items:center;gap:9px;padding:10px 13px;border-bottom:1px solid var(--line);position:relative}
+.board .bh::before{content:'';position:absolute;inset:0 auto 0 0;width:5px;background:var(--c,#888)}
+.board .bh b{font-family:var(--disp);font-size:16px;text-transform:uppercase;letter-spacing:.04em}
+.board .bh .ct{margin-left:auto;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.board.turn{border-color:var(--lead);box-shadow:0 0 0 1px var(--lead), 0 0 26px color-mix(in srgb,var(--lead) 25%, transparent)}
+.board ul{list-style:none;padding:5px 0}
+.board li{display:flex;justify-content:space-between;padding:5px 13px;font-size:12.5px}
+.board li .r{color:var(--muted);font-size:10.5px;margin-left:7px}
+.board .claim{margin:9px 13px;width:calc(100% - 26px);padding:8px;font-size:13px}
+.dpick{border:1px solid var(--line);border-radius:16px;background:var(--panel);padding:18px}
+.dlist{display:flex;flex-direction:column;gap:8px;max-height:560px;overflow-y:auto;margin-top:4px}
+.dp{display:flex;align-items:center;gap:11px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--panel-2)}
+.dp .nm{font-weight:600;font-size:14.5px}
+.dp .meta2{color:var(--muted);font-size:11.5px}
+.dp .rt{font-family:var(--disp);font-weight:900;font-size:19px;color:var(--gold);width:34px;text-align:center}
+.dp .btn{margin-left:auto;padding:9px 16px;font-size:14px}
+
 /* ===== v2: trophies on landing ===== */
 .trophies{max-width:760px;margin:0 auto 60px}
 .trophies .tro{display:flex;gap:12px;align-items:center;border:1px solid var(--line);border-radius:11px;padding:11px 15px;background:var(--panel);margin-bottom:8px;font-size:13.5px}
@@ -346,10 +374,254 @@ select.csel{background:var(--panel-2);border:1px solid var(--line);border-radius
   .bidbtn{position:sticky;bottom:78px;z-index:30;box-shadow:0 10px 36px rgba(0,0,0,.6)}
 }
 </style>
+<style>
+/* ════════════════════════════════════════════════════════════════
+   THE HAMMER — "BROADCAST ROYALE" PREMIUM THEME
+   Jet black · navy depth · metallic champagne gold · glass chrome
+   ESPN lower-thirds × FUT card energy × IPL auction night
+════════════════════════════════════════════════════════════════ */
+:root{
+  --disp:'Space Grotesk',sans-serif;
+  --body:'Inter',sans-serif;
+  --num:'Saira Condensed',sans-serif;
+  --night:#05060C;
+  --navy:#0A0F22; --navy-2:#0D1430;
+  --panel:rgba(16,22,46,.55); --panel-2:rgba(10,14,32,.6);
+  --line:rgba(148,163,224,.14); --line-hi:rgba(245,196,84,.35);
+  --ink:#F4F6FF; --muted:#98A2C8;
+  --gold:#F5C454; --gold-deep:#C8901A; --gold-hi:#FFE9AE;
+  --metal:linear-gradient(135deg,#FFF3CF 0%,#F5C454 28%,#C8901A 52%,#F5C454 74%,#FFEBB6 100%);
+  --r-lg:22px; --r-md:15px; --r-sm:10px;
+  --shadow-lg:0 30px 90px rgba(0,0,0,.65);
+  --glass:blur(18px) saturate(1.35);
+}
+
+/* ---------- atmosphere ---------- */
+body{
+  background:var(--night);
+  background-image:
+    radial-gradient(1100px 640px at 14% -10%, color-mix(in srgb, var(--lead) 17%, transparent), transparent 60%),
+    radial-gradient(960px 600px at 86% -8%, rgba(64,86,200,.16), transparent 58%),
+    radial-gradient(1500px 900px at 50% 118%, rgba(245,196,84,.07), transparent 55%),
+    repeating-linear-gradient(115deg, rgba(255,255,255,.012) 0 2px, transparent 2px 9px),
+    linear-gradient(180deg,#070A16 0%, #05060C 100%);
+  letter-spacing:-.011em;
+}
+body::before{ /* broadcast vignette */
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  box-shadow:inset 0 0 220px 60px rgba(0,0,0,.55);
+}
+.wrap{position:relative;z-index:1}
+::selection{background:rgba(245,196,84,.32)}
+*::-webkit-scrollbar{width:9px;height:9px}
+*::-webkit-scrollbar-thumb{background:rgba(245,196,84,.28);border-radius:99px;border:2px solid transparent;background-clip:content-box}
+*::-webkit-scrollbar-track{background:transparent}
+
+/* ---------- glass chrome ---------- */
+.card,.block,.tossbar,.modal,.purse,.tk,.msg,.pl,.dp,.board,.lt,.rule,.squad,.award,.lb,.tro,.dpick,.tl{
+  background:var(--panel);
+  border:1px solid var(--line);
+  backdrop-filter:var(--glass); -webkit-backdrop-filter:var(--glass);
+  position:relative;
+}
+.card,.modal,.tossbar,.dpick{border-radius:var(--r-lg);box-shadow:var(--shadow-lg), inset 0 1px 0 rgba(255,255,255,.07)}
+.card::before,.tossbar::before,.dpick::before{ /* gold hairline crown */
+  content:'';position:absolute;top:0;left:8%;right:8%;height:1px;
+  background:linear-gradient(90deg,transparent,var(--gold) 50%,transparent);opacity:.55;
+}
+.purse,.board,.squad,.award{border-radius:var(--r-md)}
+.tk,.msg,.pl,.dp,.lt,.lb,.tl,.tro,.rule{border-radius:12px}
+
+/* ---------- THE BLOCK: FUT-card spotlight stage ---------- */
+.block{
+  border-radius:26px;overflow:hidden;
+  background:
+    radial-gradient(560px 360px at 50% 6%, color-mix(in srgb, var(--lead) 22%, transparent), transparent 70%),
+    radial-gradient(900px 500px at 50% -20%, rgba(255,255,255,.05), transparent 60%),
+    linear-gradient(180deg, var(--navy-2) 0%, rgba(9,13,30,.72) 60%);
+  border:1px solid color-mix(in srgb, var(--lead) 30%, var(--line));
+  box-shadow:0 0 0 1px rgba(245,196,84,.1), 0 40px 110px rgba(0,0,0,.7),
+             0 0 90px -28px color-mix(in srgb, var(--lead) 55%, transparent),
+             inset 0 1px 0 rgba(255,255,255,.08);
+}
+.block::before{ /* corner accents */
+  content:'';position:absolute;inset:12px;pointer-events:none;border-radius:18px;
+  background:
+    linear-gradient(var(--gold),var(--gold)) top left/26px 2px,
+    linear-gradient(var(--gold),var(--gold)) top left/2px 26px,
+    linear-gradient(var(--gold),var(--gold)) top right/26px 2px,
+    linear-gradient(var(--gold),var(--gold)) top right/2px 26px,
+    linear-gradient(var(--gold),var(--gold)) bottom left/26px 2px,
+    linear-gradient(var(--gold),var(--gold)) bottom left/2px 26px,
+    linear-gradient(var(--gold),var(--gold)) bottom right/26px 2px,
+    linear-gradient(var(--gold),var(--gold)) bottom right/2px 26px;
+  background-repeat:no-repeat;opacity:.5;
+}
+.block::after{height:3px;background:linear-gradient(90deg,transparent,var(--lead) 30%,var(--lead) 70%,transparent)}
+.lotno{
+  display:inline-block;font-family:var(--disp);font-weight:700;font-size:11px;letter-spacing:.34em;color:#0B0F1E;
+  background:var(--metal);padding:6px 18px 5px;border-radius:3px;
+  clip-path:polygon(10px 0,100% 0,calc(100% - 10px) 100%,0 100%);
+}
+.avatar{
+  width:96px;height:96px;font-size:34px;color:#0B0F1E;
+  background:
+    radial-gradient(circle at 32% 24%, rgba(255,255,255,.55), transparent 46%),
+    var(--metal);
+  border:2px solid var(--gold-hi);
+  box-shadow:0 0 0 5px color-mix(in srgb, var(--lead) 40%, transparent),
+             0 14px 44px color-mix(in srgb, var(--lead) 45%, transparent);
+}
+.pname{
+  letter-spacing:-.02em;font-weight:700;
+  background:linear-gradient(180deg,#FFFFFF 30%, #C7CFF2 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.ptag{border-radius:4px;border-color:var(--line);background:rgba(255,255,255,.03)}
+.ptag.role{background:rgba(245,196,84,.1);border-color:var(--line-hi)}
+.bignum{
+  font-family:var(--num);font-weight:900;
+  background:linear-gradient(180deg, color-mix(in srgb,var(--lead) 55%, #fff) 0%, var(--lead) 60%, color-mix(in srgb,var(--lead) 70%, #000) 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 0 26px color-mix(in srgb, var(--lead) 50%, transparent));
+  text-shadow:none;
+}
+.ring .t{font-family:var(--num)}
+.stamp{
+  border-width:4px;border-radius:6px;font-weight:800;
+  background:rgba(5,6,12,.85);backdrop-filter:blur(6px);
+  clip-path:polygon(14px 0,100% 0,calc(100% - 14px) 100%,0 100%);
+  padding:6px 40px;
+}
+
+/* commentary = broadcast lower-third */
+.comm-line{
+  font-style:normal;border:none;border-radius:0 8px 8px 0;
+  background:linear-gradient(90deg, rgba(9,13,30,.92), rgba(13,20,48,.75));
+  border-left:none;padding-left:0;overflow:hidden;display:flex;align-items:center;
+}
+.comm-line .mic{
+  background:var(--metal);color:#0B0F1E;align-self:stretch;display:flex;align-items:center;
+  padding:0 12px;margin-right:12px;font-weight:800;
+  clip-path:polygon(0 0,100% 0,calc(100% - 8px) 100%,0 100%);
+}
+
+/* ---------- controls ---------- */
+.btn{
+  border-radius:12px;padding:14px 30px;font-family:var(--disp);font-weight:700;font-size:16px;
+  letter-spacing:.05em;color:#1A1304;position:relative;overflow:hidden;
+  background:var(--metal);background-size:220% 220%;
+  box-shadow:0 10px 32px rgba(245,196,84,.3), inset 0 1px 0 rgba(255,255,255,.6), inset 0 -2px 0 rgba(110,72,6,.45);
+}
+.btn:hover{background-position:90% 60%;transform:translateY(-1px);
+  box-shadow:0 16px 42px rgba(245,196,84,.42), inset 0 1px 0 rgba(255,255,255,.6), inset 0 -2px 0 rgba(110,72,6,.45)}
+.btn::after{ /* sheen sweep */
+  content:'';position:absolute;top:0;bottom:0;width:46%;left:-60%;
+  background:linear-gradient(105deg,transparent,rgba(255,255,255,.5),transparent);
+  transform:skewX(-18deg);transition:left .45s ease;
+}
+.btn:hover::after{left:120%}
+.btn:active{transform:translateY(0) scale(.99)}
+.btn.ghost,.btn.danger{background:rgba(255,255,255,.045);color:var(--ink);box-shadow:none;border:1px solid var(--line);backdrop-filter:blur(10px)}
+.btn.ghost::after,.btn.danger::after{display:none}
+.btn.ghost:hover{border-color:var(--line-hi);color:var(--gold);transform:none}
+.btn.danger{border-color:rgba(255,92,92,.5);color:#FF8E8E}
+.btn:disabled{background:rgba(255,255,255,.05);color:#69719A;box-shadow:none;border:1px solid var(--line)}
+.btn:disabled::after{display:none}
+.bidbtn{border-radius:16px;font-size:23px;letter-spacing:.06em}
+.hammerbtn{
+  background:linear-gradient(135deg,#FF9D9D,#E33535 55%,#9E1717);color:#fff;
+  box-shadow:0 10px 36px rgba(227,53,53,.4), inset 0 1px 0 rgba(255,255,255,.35), inset 0 -2px 0 rgba(70,5,5,.5);
+}
+.field input,.field textarea,.psearch,.chatrow input,select.csel{
+  background:rgba(7,10,24,.6);border:1px solid var(--line);border-radius:var(--r-sm);
+  transition:border-color .15s, box-shadow .15s;
+}
+.field input:focus,.field textarea:focus,.psearch:focus,.chatrow input:focus{
+  border-color:var(--gold);box-shadow:0 0 0 3px rgba(245,196,84,.16), 0 0 24px -6px rgba(245,196,84,.35)}
+.field label{color:#7E88B0}
+.tab,.pf,.tgl{border-radius:8px;backdrop-filter:blur(8px);font-family:var(--disp)}
+.tab.on,.pf.on,.tgl.on{background:rgba(245,196,84,.12);border-color:var(--line-hi);
+  box-shadow:inset 0 0 0 1px rgba(245,196,84,.15), 0 0 18px -6px rgba(245,196,84,.5)}
+
+/* ---------- landing hero ---------- */
+.wordmark{letter-spacing:-.02em;font-weight:700}
+.wordmark .the{color:#7E88B0}
+.wordmark .hammer{
+  font-family:var(--num);font-weight:900;letter-spacing:.01em;
+  background:var(--metal);background-size:200% 200%;
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 12px 44px rgba(245,196,84,.3));
+  animation:shimmer 5.5s ease-in-out infinite;
+}
+@keyframes shimmer{0%,100%{background-position:0% 30%}50%{background-position:100% 70%}}
+.tag b{color:var(--gold-hi)}
+.badgeline{display:flex;gap:8px;justify-content:center;margin-top:24px;flex-wrap:wrap}
+.badge{font-size:11px;letter-spacing:.16em;text-transform:uppercase;font-weight:700;color:var(--muted);
+  border:1px solid var(--line);border-radius:6px;padding:8px 15px;background:rgba(255,255,255,.035);backdrop-filter:blur(8px)}
+.rule .k{background:var(--metal);-webkit-background-clip:text;background-clip:text;color:transparent;font-family:var(--num);font-size:26px}
+.gateway .card{transition:transform .2s ease, border-color .2s ease}
+.gateway .card:hover{transform:translateY(-4px);border-color:var(--line-hi)}
+.gateway .card h3{letter-spacing:-.01em}
+
+/* ---------- rails, lists, hovers ---------- */
+.eyebrow{font-weight:700;letter-spacing:.34em;color:var(--gold)}
+.rail h4,.ticker h4,.minihead{color:#7E88B0;letter-spacing:.26em}
+.purse,.fr,.dp,.pl,.lb,.board{transition:transform .16s ease, border-color .16s ease, background .16s ease, box-shadow .16s ease}
+.purse:hover,.dp:hover,.pl:hover{transform:translateY(-2px);background:rgba(22,30,62,.6);border-color:var(--line-hi)}
+.purse.lead{border-color:var(--lead);box-shadow:0 0 26px -8px color-mix(in srgb, var(--lead) 60%, transparent)}
+.purse .amt,.tk .a,.squad li .pr,.modal li .pr,.tl .pr,.lb .sc{font-family:var(--num);font-weight:800}
+.fr{border-radius:var(--r-md);background:rgba(10,14,32,.55);backdrop-filter:blur(10px)}
+.fr:hover:not(:disabled){box-shadow:0 14px 36px -12px var(--c)}
+.fr::before{border-radius:99px;inset:10px auto 10px 0}
+.board.turn{box-shadow:0 0 0 1px var(--lead), 0 0 36px -8px color-mix(in srgb,var(--lead) 60%, transparent)}
+.onclock{font-weight:700;background:linear-gradient(180deg,#fff 20%, var(--lead) 90%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 0 24px color-mix(in srgb,var(--lead) 40%,transparent))}
+.roomcode{font-family:var(--num);
+  background:var(--metal);-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 6px 24px rgba(245,196,84,.25))}
+.roomcode small{color:#7E88B0;-webkit-text-fill-color:#7E88B0}
+
+/* host bar = broadcast control deck */
+.hostbar{
+  background:rgba(8,11,26,.82);backdrop-filter:blur(20px);
+  border:1px solid var(--line-hi);border-bottom:none;border-radius:18px 18px 0 0;
+  box-shadow:0 -14px 60px rgba(0,0,0,.6), inset 0 1px 0 rgba(245,196,84,.18);
+}
+.hostbar .lbl{color:var(--gold)}
+.conn{background:rgba(8,11,26,.7);border:1px solid var(--line);padding:6px 12px;border-radius:6px;backdrop-filter:blur(10px)}
+.toast{backdrop-filter:blur(16px);background:rgba(10,14,32,.92);border-radius:var(--r-sm);border-color:var(--line-hi)}
+
+/* awards = trophy plaques */
+.award{background:linear-gradient(155deg, rgba(245,196,84,.12), rgba(10,14,32,.55) 55%);border-color:var(--line-hi)}
+.award .ttl{background:var(--metal);-webkit-background-clip:text;background-clip:text;color:transparent}
+.simtable th{color:#7E88B0}
+.simtable tr.q td{background:rgba(245,196,84,.05)}
+.trophies .tro .cup{filter:drop-shadow(0 0 12px rgba(245,196,84,.5))}
+
+/* credit */
+.credit{
+  position:fixed;left:16px;bottom:14px;z-index:45;font-size:10.5px;letter-spacing:.24em;
+  text-transform:uppercase;font-weight:700;color:#69719A;
+  background:rgba(8,11,26,.7);border:1px solid var(--line);border-radius:6px;
+  padding:8px 15px;backdrop-filter:blur(10px);user-select:none;
+}
+.credit b{background:var(--metal);-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:800}
+@media(max-width:980px){.credit{display:none}}
+.herofoot{text-align:center;color:#69719A;font-size:12px;letter-spacing:.28em;text-transform:uppercase;
+  font-weight:700;padding:10px 0 56px}
+.herofoot b{background:var(--metal);-webkit-background-clip:text;background-clip:text;color:transparent}
+
+/* weight normalization (Space Grotesk caps at 700) */
+.fr .ab,.lb b,.tk b,.board .bh b,.modal .head b,.squad .head b,.leadteam,.stamp,.lotno{font-weight:700}
+
+</style>
 </head>
 <body>
 
 <div class="conn" id="conn"><span class="dot"></span><span id="connTxt">offline</span></div>
+<div class="credit">Made by <b>Rishik Mora</b></div>
 <div class="toast" id="toast"></div>
 
 <!-- ============ LANDING ============ -->
@@ -358,18 +630,31 @@ select.csel{background:var(--panel-2);border:1px solid var(--line);border-radius
     <div class="hero">
       <h1 class="wordmark"><span class="the">The</span><span class="hammer">Hammer</span></h1>
       <p class="tag">Run a full IPL-style auction with your friends. <b>Real purse maths, real bid increments, live for everyone in the room.</b></p>
+      <div class="badgeline">
+        <span class="badge">⚡ Realtime</span><span class="badge">🪙 Toss & draft mode</span>
+        <span class="badge">🏟 Local tournaments</span><span class="badge">🔒 Race-safe backend</span>
+      </div>
     </div>
-    <div class="gateway">
+    <div class="gateway" style="grid-template-columns:repeat(3,1fr);max-width:1020px">
       <div class="card">
-        <h3>Host a room</h3>
-        <p>You become the auctioneer — you bring the hammer down on every lot.</p>
+        <h3>Host an auction</h3>
+        <p>You become the auctioneer — paddles, purses, and the hammer.</p>
         <div class="field"><label>Room name</label><input id="newRoomName" placeholder="Saturday Mega Auction" maxlength="40"></div>
         <div class="field"><label>Seconds per lot (10–120)</label><input id="newRoomTimer" type="number" min="10" max="120" step="5" value="30"></div>
-        <button class="btn" id="btnCreate" style="width:100%">Create room</button>
+        <button class="btn" id="btnCreate" style="width:100%">Create auction</button>
+      </div>
+      <div class="card">
+        <h3>Host a draft</h3>
+        <p>Add your friends' names. A toss decides who picks first, then it goes one by one.</p>
+        <div class="field"><label>Room name</label><input id="draftRoomName" placeholder="Sunday Draft Night" maxlength="40"></div>
+        <div class="field"><label>Friends (one per line, 2–10)</label><textarea id="draftNames" rows="3" placeholder="Rishik&#10;Arjun&#10;Sai" style="background:var(--panel-2);border:1px solid var(--line);border-radius:10px;color:var(--ink);padding:13px 14px;font-size:15px;outline:none;resize:vertical;font-family:var(--body)"></textarea></div>
+        <div class="field"><label>Custom player pool — optional, for local tournaments</label>
+          <textarea id="draftPool" rows="3" placeholder="Leave empty to draft the 76 IPL stars.&#10;One per line: Name, Role, Rating&#10;e.g.  Sai Kiran, Batter, 82   or just   Vamsi" style="background:var(--panel-2);border:1px solid var(--line);border-radius:10px;color:var(--ink);padding:13px 14px;font-size:14px;outline:none;resize:vertical;font-family:var(--body)"></textarea></div>
+        <button class="btn" id="btnCreateDraft" style="width:100%">Create draft</button>
       </div>
       <div class="card">
         <h3>Join a room</h3>
-        <p>Get the 6-letter code from your host and pick a franchise.</p>
+        <p>Get the 6-letter code from your host. Works for auctions and drafts.</p>
         <div class="field"><label>Room code</label><input id="joinCode" placeholder="e.g. KX7P2M" maxlength="6" style="text-transform:uppercase;letter-spacing:.3em;font-family:var(--disp);font-weight:800;font-size:22px"></div>
         <button class="btn ghost" id="btnJoin" style="width:100%">Join room</button>
       </div>
@@ -380,6 +665,7 @@ select.csel{background:var(--panel-2);border:1px solid var(--line);border-radius
       <div class="rule"><div class="k">Real slabs</div><div class="v">Bid increments follow IPL slabs — ₹5 L jumps under a crore, ₹50 L jumps past ₹10 Cr.</div></div>
     </div>
     <div class="trophies" id="trophies"></div>
+    <div class="herofoot">🔨 The Hammer — Made by <b>Rishik Mora</b></div>
   </div>
 </section>
 
@@ -514,6 +800,40 @@ select.csel{background:var(--panel-2);border:1px solid var(--line);border-radius
     <div class="foot"><span id="mSpent"></span><span id="mLeft"></span></div>
   </div>
 </div>
+
+<!-- ============ DRAFT STAGE ============ -->
+<section class="screen" id="draft">
+  <div class="wrap">
+    <div class="topline">
+      <div>
+        <div class="eyebrow" id="dRoomName">Draft</div>
+        <div class="meta">Code <b id="dCode"></b> · share it so friends can pick from their own phones</div>
+      </div>
+      <button class="btn ghost" id="btnLeave3">Leave</button>
+    </div>
+
+    <div class="tossbar">
+      <div class="won" id="dToss">Toss</div>
+      <div class="onclock" id="dOnClock">—</div>
+      <div class="pickmeta" id="dPickMeta"></div>
+    </div>
+
+    <div class="dgrid">
+      <aside id="dBoards"></aside>
+      <main class="dpick">
+        <input class="psearch" id="dSearch" placeholder="Search available players…">
+        <div class="pfilters" id="dFilters">
+          <button class="pf on" data-f="all">All</button>
+          <button class="pf" data-f="Batter">Bat</button>
+          <button class="pf" data-f="Bowler">Bowl</button>
+          <button class="pf" data-f="All-Rounder">AR</button>
+          <button class="pf" data-f="Wicket-Keeper">WK</button>
+        </div>
+        <div class="dlist" id="dList"></div>
+      </main>
+    </div>
+  </div>
+</section>
 
 <!-- ============ WAR ROOM ============ -->
 <div class="modal-bg" id="wrBg">
@@ -672,6 +992,11 @@ async function refresh(){
 
   if(room.status === 'lobby') renderLobby();
   else if(room.status === 'live'){
+    if(room.mode === 'draft'){
+      if(!$('draft').classList.contains('active')) show('draft');
+      renderDraft();
+      return;
+    }
     if(!$('stage').classList.contains('active')) show('stage');
     if(prevPlayer && room.current_player_id && prevPlayer !== room.current_player_id){
       // a lot just closed somewhere else — refresh ticker header
@@ -718,7 +1043,8 @@ $('btnJoin').onclick = async ()=>{
   if(!room) return toast('Room not found — check the code', true);
   S.roomId = room.id; S.code = room.code;
   saveSession(); subscribe(); await refresh();
-  show(room.status === 'lobby' ? 'lobby' : room.status === 'live' ? 'stage' : 'results');
+  const liveScreen = room.mode === 'draft' ? 'draft' : 'stage';
+  show(room.status === 'lobby' ? 'lobby' : room.status === 'live' ? liveScreen : 'results');
 };
 
 /* ================= LOBBY ================= */
@@ -976,7 +1302,7 @@ $('btnAgain').onclick = leave;
     if(!s?.roomId) return;
     Object.assign(S, s);
     subscribe(); await refresh();
-    if(S.room) show(S.room.status==='lobby'?'lobby':S.room.status==='live'?'stage':'results');
+    if(S.room) show(S.room.status==='lobby'?'lobby':S.room.status==='live'?(S.room.mode==='draft'?'draft':'stage'):'results');
     else leave();
   }catch(e){ leave(); }
 })();
@@ -1470,6 +1796,222 @@ $('btnHighlights').onclick = ()=>{
 /* ---------- boot v2 ---------- */
 renderTrophies();
 if(S.roomId){ subscribe(); loadAllPlayers(); }
+
+</script>
+<script>
+/* ====================================================================
+   THE HAMMER v3 — DRAFT MODE
+   Host adds friends by name → server toss → one-by-one picks.
+==================================================================== */
+
+/* ---------- create draft ---------- */
+$('btnCreateDraft').onclick = async ()=>{
+  try{
+    $('btnCreateDraft').disabled = true;
+    const names = $('draftNames').value.split('\n').map(s=>s.trim()).filter(Boolean);
+    if(names.length < 2) return toast('Add at least 2 friend names (one per line)', true);
+    // optional local-tournament pool: "Name, Role, Rating" per line
+    const poolLines = $('draftPool').value.split('\n').map(s=>s.trim()).filter(Boolean);
+    const custom = poolLines.map(line=>{
+      const [name, role, rating] = line.split(',').map(s=>(s||'').trim());
+      return { name, role: role||null, rating: rating||null };
+    }).filter(p=>p.name);
+    if(custom.length && custom.length < names.length)
+      return toast(`Pool too small: ${names.length} drafters need at least ${names.length} players`, true);
+    const d = await rpc('ipl_create_draft', {
+      p_room_name: $('draftRoomName').value || 'Friends Draft Night',
+      p_names: names,
+      p_custom_players: custom.length ? custom : null
+    });
+    S.roomId = d.room_id; S.code = d.code; S.hostToken = d.host_token;
+    saveSession(); subscribe(); await refresh(); show('lobby');
+    toast('Draft room created — share the code');
+  }catch(e){ toast(e.message, true); }
+  finally{ $('btnCreateDraft').disabled = false; }
+};
+
+/* ---------- draft lobby (wraps v1 renderLobby) ---------- */
+const _renderLobby = renderLobby;
+renderLobby = function(){
+  if(S.room?.mode !== 'draft') { $('claimBox').style.display=''; return _renderLobby(); }
+  $('lobbyRoomName').textContent = `${S.room.name} · Draft`;
+  $('lobbyCode').firstChild.textContent = S.code;
+  $('claimBox').style.display = 'none';
+  $('btnStart').style.display = S.hostToken ? '' : 'none';
+  $('btnStart').disabled = false;
+  $('btnStart').textContent = 'Toss & start draft';
+
+  $('lobbyTeams').innerHTML = S.teams.map(t=>{
+    const f = FRANCHISES[t.franchise]||{c:'#888'};
+    const mine = t.id === S.teamId;
+    const claimBtn = (!t.seat_claimed && !S.teamId)
+      ? `<button class="btn ghost" style="margin-left:auto;padding:8px 14px;font-size:13px" data-claim="${t.id}">This is me</button>`
+      : `<span style="margin-left:auto;font-size:11px;letter-spacing:.14em;color:${t.seat_claimed?'var(--ok)':'#5A648C'};font-weight:700">${mine?'YOU':(t.seat_claimed?'CLAIMED':'OPEN — or host picks for them')}</span>`;
+    return `<div class="lt"><span class="chip" style="background:${f.c}"></span>
+      <div><b>${t.owner_name}</b><div class="who">${(FRANCHISES[t.franchise]||{}).name||''} · drafts until the pool runs out</div></div>${claimBtn}</div>`;
+  }).join('');
+  $('lobbyTeams').querySelectorAll('[data-claim]').forEach(b=>{
+    b.onclick = async ()=>{
+      try{
+        b.disabled = true;
+        const d = await rpc('ipl_claim_seat', { p_code:S.code, p_team_id:b.dataset.claim });
+        S.teamId = d.team_id; S.ownerToken = d.owner_token; saveSession();
+        toast('Seat claimed — you pick from this device'); queueRefresh();
+      }catch(e){ toast(e.message, true); b.disabled=false; }
+    };
+  });
+};
+
+/* ---------- start: mode-aware ---------- */
+$('btnStart').onclick = async ()=>{
+  try{
+    if(S.room?.mode === 'draft') await rpc('ipl_start_draft', { p_room_id:S.roomId, p_host_token:S.hostToken });
+    else await rpc('ipl_start_auction', { p_room_id:S.roomId, p_host_token:S.hostToken });
+  }catch(e){ toast(e.message, true); }
+};
+
+/* ---------- draft stage ---------- */
+let D = { filter:'all', lastPick:0, tossAnnounced:false };
+
+$('dSearch').oninput = ()=> renderDraftList();
+function buildDraftFilters(){
+  const roles = [...new Set(V2.allPlayers.map(p=>p.role))].sort().slice(0,6);
+  if(!roles.includes(D.filter) && D.filter!=='all') D.filter = 'all';
+  const want = ['all',...roles].join('|');
+  if($('dFilters').dataset.sig === want) return;     // rebuild only when roles change
+  $('dFilters').dataset.sig = want;
+  $('dFilters').innerHTML = ['all',...roles].map(r=>
+    `<button class="pf ${D.filter===r?'on':''}" data-f="${r}">${r==='all'?'All':r}</button>`).join('');
+  $('dFilters').querySelectorAll('.pf').forEach(b=>{
+    b.onclick = ()=>{ D.filter=b.dataset.f; $('dFilters').querySelectorAll('.pf').forEach(x=>x.classList.toggle('on',x===b)); renderDraftList(); };
+  });
+}
+$('btnLeave3').onclick = leave;
+
+function draftTurnTeam(){
+  const ord = S.room?.draft_order || [];
+  if(!ord.length) return null;
+  return S.teams.find(t=>t.id === ord[S.room.current_pick_index % ord.length]);
+}
+
+async function renderDraft(){
+  const r = S.room;
+  $('dRoomName').textContent = r.name;
+  $('dCode').textContent = r.code;
+
+  await loadAllPlayers();   // keeps boards + list fresh
+  buildDraftFilters();
+
+  const ord = r.draft_order || [];
+  const n = ord.length;
+  const total = V2.allPlayers.length;
+  const tossWinner = S.teams.find(t=>t.id===ord[0]);
+  const turn = draftTurnTeam();
+  const f = turn ? (FRANCHISES[turn.franchise]||{c:'#F5B82E'}) : null;
+  setLead(f?.c || null);
+
+  // toss announcement (once per session)
+  if(tossWinner && !D.tossAnnounced){
+    D.tossAnnounced = true;
+    commentDraft(`Toss won by ${tossWinner.owner_name} — they pick first!`);
+    SFX.alert();
+  }
+
+  $('dToss').textContent = tossWinner ? `🪙 Toss: ${tossWinner.owner_name} picks first` : 'Toss';
+  $('dOnClock').textContent = turn ? `On the clock: ${turn.owner_name}` : '—';
+  $('dOnClock').classList.toggle('me', !!turn && turn.id === S.teamId);
+  $('dPickMeta').textContent = `Round ${Math.floor(r.current_pick_index/n)+1} of ${Math.ceil(total/n)} · Pick ${Math.min(r.current_pick_index+1,total)} of ${total}`;
+
+  // new pick detection → announce
+  if(r.current_pick_index > D.lastPick && D.lastPick > 0){
+    const last = V2.allPlayers.filter(p=>p.pick_number).sort((a,b)=>b.pick_number-a.pick_number)[0];
+    if(last){
+      const team = S.teams.find(t=>t.id===last.sold_to_team);
+      SFX.gavel();
+      commentDraft(`Pick ${last.pick_number}: ${team?.owner_name} takes ${last.name} (${last.role}, ${last.rating}).`);
+      if(team){ const tf=FRANCHISES[team.franchise]; if(tf && last.pick_number%n===0) confetti(tf.c); }
+    }
+  }
+  D.lastPick = r.current_pick_index;
+
+  renderBoards(turn);
+  renderDraftList(turn);
+}
+
+function commentDraft(line){ toast(line); speak(line); }
+
+function renderBoards(turn){
+  const ord = S.room.draft_order || [];
+  $('dBoards').innerHTML = ord.map(id=>{
+    const t = S.teams.find(x=>x.id===id); if(!t) return '';
+    const f = FRANCHISES[t.franchise]||{c:'#888'};
+    const picks = V2.allPlayers.filter(p=>p.sold_to_team===t.id).sort((a,b)=>(a.pick_number||0)-(b.pick_number||0));
+    return `<div class="board ${turn?.id===t.id?'turn':''}" style="--c:${f.c}">
+      <div class="bh"><b style="color:${f.c}">${t.owner_name}</b><span class="ct">${picks.length} picks</span></div>
+      <ul>${picks.map(p=>`<li><span>${p.pick_number}. ${p.name}<span class="r">${p.role}</span></span><span style="color:var(--muted)">${p.rating}</span></li>`).join('')||'<li style="color:#5A648C">No picks yet</li>'}</ul>
+    </div>`;
+  }).join('');
+}
+
+function renderDraftList(turn = draftTurnTeam()){
+  const q = ($('dSearch').value||'').toLowerCase();
+  const canPick = !!turn && (turn.id === S.teamId || !!S.hostToken) && S.room.status==='live';
+  const list = V2.allPlayers.filter(p=>{
+    if(p.status!=='pending') return false;
+    if(D.filter!=='all' && p.role!==D.filter) return false;
+    return !q || p.name.toLowerCase().includes(q);
+  }).sort((a,b)=>b.rating-a.rating);
+  $('dList').innerHTML = list.map(p=>{
+    const meta = p.country === 'Local' ? p.role : `${p.role} · ${p.country} · base ${money(p.base_price)}`;
+    return `
+    <div class="dp"><span class="rt">${p.rating}</span>
+      <div><div class="nm">${p.name}</div><div class="meta2">${meta}</div></div>
+      <button class="btn" data-pick="${p.id}" ${canPick?'':'disabled'}>Pick</button>
+    </div>`;}).join('') || '<div class="empty">No available players match.</div>';
+  $('dList').querySelectorAll('[data-pick]').forEach(b=>{
+    b.onclick = async ()=>{
+      const t = draftTurnTeam(); if(!t) return;
+      b.disabled = true;
+      try{
+        const token = (t.id===S.teamId && S.ownerToken) ? S.ownerToken : S.hostToken;
+        await rpc('ipl_draft_pick', { p_room_id:S.roomId, p_team_id:t.id, p_token:token, p_player_id:b.dataset.pick });
+      }catch(e){ toast(e.message, true); b.disabled = false; }
+    };
+  });
+}
+
+/* ---------- draft-aware awards ---------- */
+const _awardsOf = awardsOf;
+awardsOf = function(){
+  if(S.room?.mode !== 'draft') return _awardsOf();
+  const sold = V2.allPlayers.filter(p=>p.status==='sold');
+  if(!sold.length) return [];
+  const team = id=>S.teams.find(t=>t.id===id);
+  const out = [];
+  const ord = S.room.draft_order||[];
+  const tossWinner = team(ord[0]);
+  if(tossWinner) out.push({ttl:'🪙 Toss winner', who:tossWinner.owner_name, why:'Picked first overall'});
+  const first = sold.find(p=>p.pick_number===1);
+  if(first) out.push({ttl:'1️⃣ First overall pick', who:first.name, why:`by ${team(first.sold_to_team)?.owner_name}`});
+  const best = [...sold].sort((a,b)=>b.rating - a.rating)[0];
+  out.push({ttl:'💎 Best player drafted', who:best.name, why:`${best.rating} rated · pick ${best.pick_number}`});
+  const steal = [...sold].sort((a,b)=>(b.rating - b.pick_number*0.8) - (a.rating - a.pick_number*0.8))[0];
+  out.push({ttl:'🧠 Steal of the draft', who:steal.name, why:`${steal.rating} rated at pick ${steal.pick_number}`});
+  const strong = S.teams.map(t=>({t,s:strengthOf(t.id)})).sort((a,b)=>b.s-a.s)[0];
+  out.push({ttl:'⚡ Strongest squad', who:strong.t.owner_name, why:`Strength ${strong.s}/100`});
+  return out;
+};
+
+/* ---------- reset caches on leave (fresh room = fresh state) ---------- */
+const _leave = leave;
+leave = function(){
+  D = { filter:'all', lastPick:0, tossAnnounced:false };
+  V2.allPlayers = []; V2.bidsByPlayer = {}; V2.lastLot = null;
+  V2.lastBidCount = 0; V2.lastSold = 0; V2.lastUnsold = 0; V2.chatLoaded = false;
+  document.body.classList.remove('drama'); clearInterval(V2.dramaIv);
+  _leave();
+};
+$('btnLeave').onclick = leave; $('btnLeave2').onclick = leave; $('btnLeave3').onclick = leave; $('btnAgain').onclick = leave;
 
 </script>
 </body>
