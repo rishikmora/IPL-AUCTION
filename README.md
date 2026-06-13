@@ -46,6 +46,12 @@ Two game modes: **Auction** (purses, paddles, the hammer) and **Draft** (toss �
 - **Player Browser**: Search and role-filter all 76 players with live status (pending/live/sold/unsold + price)
 - **Watchlist**: Star players; get an alert chime + toast the moment they hit the block
 
+### 🎙 Live Voice (v4)
+- **In-room voice chat**: Tap "Join voice" — peer-to-peer WebRTC audio mesh between everyone in the room, signaled over Supabase Realtime (presence + broadcast), STUN-only, no media server and no extra cost
+- **Self-mute** toggle, echo cancellation and noise suppression on by default
+- **Host moderation, two levels**: 🔇 *Mute once* instantly cuts a person's mic (they may unmute themselves); ⛔ *Mute for the whole auction* is persisted in the database, blocks them from rejoining voice, and every client silences their audio — host can lift it with 🔊
+- **Honest limits**: mesh audio is ideal for ≤6–8 talkers; STUN-only means very strict corporate NATs may not connect (a TURN server would fix that); and because audio is peer-to-peer, the auction-length mute is enforced by every client in the app rather than by a server
+
 ### 💬 Social Layer (v2)
 - **Room Chat**: Realtime chat with franchise-colored identity, token-verified senders, 280-char limit, unread dot
 - **Trophy Room**: Strongest-squad champions from your past auctions, on the landing page
